@@ -1,4 +1,3 @@
-
 # Loads default set of integrations. Do not remove.
 default_config:
 
@@ -18,3 +17,206 @@ lovelace:
       mode: yaml
       filename: casa.yaml
       title: Casa
+
+# =====================================================================
+# BLOQUE MQTT COMPLETO (Sustituye al antiguo mqtt.yaml)
+# =====================================================================
+mqtt:
+  light:
+    - name: "Luz cocina"
+      unique_id: luz_cocina
+      state_topic: "casa/cocina/luz"
+      command_topic: "casa/cocina/luz/set"
+      brightness_state_topic: "casa/cocina/luz/brillo"
+      brightness_command_topic: "casa/cocina/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Luz habitacion 1"
+      unique_id: luz_hab1
+      state_topic: "casa/hab1/luz"
+      command_topic: "casa/hab1/luz/set"
+      brightness_state_topic: "casa/hab1/luz/brillo"
+      brightness_command_topic: "casa/hab1/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Luz habitacion 2"
+      unique_id: luz_hab2
+      state_topic: "casa/hab2/luz"
+      command_topic: "casa/hab2/luz/set"
+      brightness_state_topic: "casa/hab2/luz/brillo"
+      brightness_command_topic: "casa/hab2/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Luz habitacion 3"
+      unique_id: luz_hab3
+      state_topic: "casa/hab3/luz"
+      command_topic: "casa/hab3/luz/set"
+      brightness_state_topic: "casa/hab3/luz/brillo"
+      brightness_command_topic: "casa/hab3/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Luz bano 1"
+      unique_id: luz_bano1
+      state_topic: "casa/bano1/luz"
+      command_topic: "casa/bano1/luz/set"
+      brightness_state_topic: "casa/bano1/luz/brillo"
+      brightness_command_topic: "casa/bano1/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Luz bano 2"
+      unique_id: luz_bano2
+      state_topic: "casa/bano2/luz"
+      command_topic: "casa/bano2/luz/set"
+      brightness_state_topic: "casa/bano2/luz/brillo"
+      brightness_command_topic: "casa/bano2/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Luz lavadora"
+      unique_id: luz_lavadora
+      state_topic: "casa/lavadora/luz"
+      command_topic: "casa/lavadora/luz/set"
+      brightness_state_topic: "casa/lavadora/luz/brillo"
+      brightness_command_topic: "casa/lavadora/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Luz pasillo"
+      unique_id: luz_pasillo
+      state_topic: "casa/pasillo/luz"
+      command_topic: "casa/pasillo/luz/set"
+      brightness_state_topic: "casa/pasillo/luz/brillo"
+      brightness_command_topic: "casa/pasillo/luz/brillo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+  cover:
+    - name: "Persiana habitacion 1"
+      unique_id: persiana_hab1
+      device_class: shutter
+      command_topic: "casa/hab1/persiana/set"
+      state_topic: "casa/hab1/persiana"
+      payload_open: "OPEN"
+      payload_close: "CLOSE"
+      state_open: "open"
+      state_closed: "closed"
+
+    - name: "Persiana habitacion 2"
+      unique_id: persiana_hab2
+      device_class: shutter
+      command_topic: "casa/hab2/persiana/set"
+      state_topic: "casa/hab2/persiana"
+      payload_open: "OPEN"
+      payload_close: "CLOSE"
+      state_open: "open"
+      state_closed: "closed"
+
+    - name: "Persiana habitacion 3"
+      unique_id: persiana_hab3
+      device_class: shutter
+      command_topic: "casa/hab3/persiana/set"
+      state_topic: "casa/hab3/persiana"
+      payload_open: "OPEN"
+      payload_close: "CLOSE"
+      state_open: "open"
+      state_closed: "closed"
+
+  switch:
+    - name: "Reposapies salon"
+      unique_id: reposapies_salon
+      state_topic: "casa/salon/reposapies"
+      command_topic: "casa/salon/reposapies/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "TV salon"
+      unique_id: tv_salon
+      state_topic: "casa/salon/tv"
+      command_topic: "casa/salon/tv/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Altavoces salon"
+      unique_id: altavoces_salon
+      state_topic: "casa/salon/altavoces"
+      command_topic: "casa/salon/altavoces/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Grifo bano 1"
+      unique_id: grifo_bano1
+      state_topic: "casa/bano1/grifo"
+      command_topic: "casa/bano1/grifo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Grifo bano 2"
+      unique_id: grifo_bano2
+      state_topic: "casa/bano2/grifo"
+      command_topic: "casa/bano2/grifo/set"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+  binary_sensor:
+    - name: "Movimiento pasillo"
+      unique_id: movimiento_pasillo
+      device_class: motion
+      state_topic: "casa/pasillo/movimiento"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Movimiento cocina"
+      unique_id: movimiento_cocina
+      device_class: motion
+      state_topic: "casa/cocina/movimiento"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Detector manos bano 1"
+      unique_id: detector_manos_bano1
+      device_class: motion
+      state_topic: "casa/bano1/manos"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Detector manos bano 2"
+      unique_id: detector_manos_bano2
+      device_class: motion
+      state_topic: "casa/bano2/manos"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+    - name: "Ventana salon"
+      unique_id: ventana_salon
+      device_class: window
+      state_topic: "casa/salon/ventana"
+      payload_on: "ON"
+      payload_off: "OFF"
+
+  sensor:
+    - name: "Hora simulada"
+      unique_id: hora_simulada
+      icon: mdi:clock-outline
+      state_topic: "casa/reloj"
+
+  climate:
+    - name: "Regulador salon"
+      unique_id: regulador_salon
+      modes:
+        - "off"
+        - "auto"
+      mode_state_topic: "casa/salon/clima/modo"
+      mode_command_topic: "casa/salon/clima/modo/set"
+      temperature_state_topic: "casa/salon/clima/consigna"
+      temperature_command_topic: "casa/salon/clima/consigna/set"
+      current_temperature_topic: "casa/salon/clima/temperatura"
+      action_topic: "casa/salon/clima/accion"
+      min_temp: 16
+      max_temp: 30
+      temp_step: 0.5
+      precision: 0.5

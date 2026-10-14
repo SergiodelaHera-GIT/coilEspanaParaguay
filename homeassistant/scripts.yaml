@@ -1,0 +1,45 @@
+netflix_luces:
+  alias: "Netflix and chill - luces"
+  icon: mdi:movie-open
+  sequence:
+    - service: light.turn_off
+      target:
+        entity_id:
+          - light.luz_cocina
+          - light.luz_habitacion_1
+          - light.luz_habitacion_2
+          - light.luz_habitacion_3
+          - light.luz_bano_1
+          - light.luz_bano_2
+          - light.luz_lavadora
+          - light.luz_pasillo
+    - service: light.turn_on
+      target:
+        entity_id: light.luz_salon_led
+      data:
+        brightness_pct: 30
+
+break_bano:
+  alias: "Break - ir al bano"
+  icon: mdi:toilet
+  mode: restart
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id:
+          - light.luz_pasillo
+          - light.luz_cocina
+          - light.luz_bano_1
+    - service: light.turn_on
+      target:
+        entity_id: light.luz_pasillo
+      data:
+        brightness_pct: 10
+    - delay:
+        seconds: 10
+    - service: light.turn_off
+      target:
+        entity_id:
+          - light.luz_pasillo
+          - light.luz_cocina
+          - light.luz_bano_1

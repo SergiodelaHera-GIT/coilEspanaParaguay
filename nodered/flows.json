@@ -1,0 +1,2104 @@
+[
+    {
+        "id": "eb77ea0fe8cb6e59",
+        "type": "tab",
+        "label": "Flujo 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "c0a5bae8e612a519",
+        "type": "mqtt-broker",
+        "name": "mosquitto",
+        "broker": "mosquitto",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "906268d3a3bb0142",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "Tick 1 segundo",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 160,
+        "wires": [
+            [
+                "c8d99fc421d33c47"
+            ]
+        ]
+    },
+    {
+        "id": "c8d99fc421d33c47",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "RELOJ VIRTUAL (para simulación)",
+        "func": "// RELOJ VIRTUAL\n// Variables globales que fijará más adelante el nodo CONTROL RELOJ:\n//   reloj_modo   -> 'real' | 'simulado'\n//   reloj_offset -> diferencia en ms respecto a la hora real (solo en modo simulado)\n// Si no existen todavía, funciona en hora real.\nconst modo = global.get('reloj_modo') || 'real';\nconst offset = global.get('reloj_offset') || 0;\n\nconst ahora = Date.now() + (modo === 'simulado' ? offset : 0);\nconst d = new Date(ahora);\nconst pad = n => String(n).padStart(2, '0');\nconst hora = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());\n\n// Variables globales que leerán el resto de nodos\nglobal.set('reloj_ahora', ahora);\nglobal.set('reloj_hora', hora);\nglobal.set('reloj_tenue', d.getHours() >= 21);   // true de 21:00 a 23:59:59\n\n// Detección de eventos: se dispara si la hora del evento se ha cruzado\n// entre el tick anterior y este. Si hay un salto de hora (botones),\n// no se dispara nada.\nconst ultimo = context.get('ultimo');\ncontext.set('ultimo', ahora);\n\nconst eventos = [\n    { h: 21, m: 0, salida: 1, nombre: '21:00' },\n    { h: 0, m: 0, salida: 2, nombre: '00:00' },\n    { h: 8, m: 0, salida: 3, nombre: '08:00' }\n];\n\nconst out = [{ payload: hora }, null, null, null];\n\nif (ultimo !== undefined && ahora > ultimo && (ahora - ultimo) <= 5000) {\n    for (const e of eventos) {\n        const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), e.h, e.m, 0).getTime();\n        if (t > ultimo && t <= ahora) {\n            out[e.salida] = { payload: e.nombre };\n        }\n    }\n}\n\nreturn out;",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 160,
+        "wires": [
+            [
+                "2fca9dc00d73cfd4"
+            ],
+            [
+                "ff7007c19f48bc62"
+            ],
+            [
+                "7cca287657c4ad6d"
+            ],
+            [
+                "aba3a1c54a327d2c"
+            ]
+        ]
+    },
+    {
+        "id": "2fca9dc00d73cfd4",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "",
+        "topic": "casa/reloj",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 780,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "ff7007c19f48bc62",
+        "type": "link out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 21:00 out",
+        "mode": "link",
+        "links": [
+            "1bd2d324ee395280",
+            "d68641b5922a20e0"
+        ],
+        "x": 775,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "7cca287657c4ad6d",
+        "type": "link out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 00:00 out",
+        "mode": "link",
+        "links": [
+            "2e101c1fbd932105",
+            "898b4d2a09743148",
+            "a9da028c75b2d1d3"
+        ],
+        "x": 775,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "aba3a1c54a327d2c",
+        "type": "link out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 8:00 out",
+        "mode": "link",
+        "links": [
+            "3f9c364259f880dd",
+            "96b9f63cc4a4b44a"
+        ],
+        "x": 775,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "bbc0bd44bcf6a3da",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "BOTON 20:59:40",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "20:59:40",
+        "payloadType": "str",
+        "x": 140,
+        "y": 340,
+        "wires": [
+            [
+                "feb66345dc5d50d3"
+            ]
+        ]
+    },
+    {
+        "id": "0db6f7994b5a7374",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": " BOTON 23:59:40",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "23:59:40",
+        "payloadType": "str",
+        "x": 140,
+        "y": 400,
+        "wires": [
+            [
+                "feb66345dc5d50d3"
+            ]
+        ]
+    },
+    {
+        "id": "e9a9e2c73d5b1fcb",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "BOTON 07:59:40",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "07:59:40",
+        "payloadType": "str",
+        "x": 140,
+        "y": 460,
+        "wires": [
+            [
+                "feb66345dc5d50d3"
+            ]
+        ]
+    },
+    {
+        "id": "0e0b6d691fe1e8c4",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "MODO SIMULADO",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "simulado",
+        "payloadType": "str",
+        "x": 150,
+        "y": 580,
+        "wires": [
+            [
+                "feb66345dc5d50d3"
+            ]
+        ]
+    },
+    {
+        "id": "8ff35d714e8a69c1",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "MODO REAL",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "real",
+        "payloadType": "str",
+        "x": 130,
+        "y": 520,
+        "wires": [
+            [
+                "feb66345dc5d50d3"
+            ]
+        ]
+    },
+    {
+        "id": "feb66345dc5d50d3",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROLES RELOJ",
+        "func": "// CONTROL RELOJ\n// Fija el modo del reloj (real / simulado) y el salto de hora.\n// Guarda en las variables globales que lee RELOJ VIRTUAL:\n//   reloj_modo   -> 'real' | 'simulado'\n//   reloj_offset -> diferencia en ms respecto a la hora real\nconst p = String(msg.payload).trim();\n\nif (p === 'real') {\n    global.set('reloj_modo', 'real');\n    global.set('reloj_offset', 0);\n    node.status({ fill: 'blue', shape: 'dot', text: 'hora REAL' });\n\n} else if (p === 'simulado') {\n    global.set('reloj_modo', 'simulado');\n    // el offset se mantiene (si aun no hay salto, vale 0 y la hora sigue igual)\n    if (global.get('reloj_offset') === undefined) global.set('reloj_offset', 0);\n    node.status({ fill: 'green', shape: 'dot', text: 'hora SIMULADA' });\n\n} else if (/^\\d{2}:\\d{2}:\\d{2}$/.test(p)) {\n    const [h, m, s] = p.split(':').map(Number);\n    const ahora = new Date();\n    const objetivo = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), h, m, s).getTime();\n    global.set('reloj_modo', 'simulado');\n    global.set('reloj_offset', objetivo - ahora.getTime());\n    node.status({ fill: 'green', shape: 'dot', text: 'salto a ' + p });\n\n} else {\n    node.warn('Payload no reconocido: ' + p);\n}\n\nreturn null;",
+        "outputs": 0,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "5155b9babd08e7e8",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "casa/#",
+        "topic": "casa/#",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 780,
+        "wires": [
+            [
+                "983431203d6ea2e9"
+            ]
+        ]
+    },
+    {
+        "id": "983431203d6ea2e9",
+        "type": "switch",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "acaba en /set",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "regex",
+                "v": "^(?!casa/salon/clima/modo/set$).*/set$",
+                "vt": "str",
+                "case": false
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 340,
+        "y": 780,
+        "wires": [
+            [
+                "18180aee8bb52d88"
+            ]
+        ]
+    },
+    {
+        "id": "18180aee8bb52d88",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "QUITA /set",
+        "func": "// QUITA /set\n// Convierte la orden en estado: casa/cocina/luz/set -> casa/cocina/luz\nconst topic = msg.topic.replace(/\\/set$/, '');\nlet payload = String(msg.payload);\n\n// Persianas: HA manda OPEN/CLOSE pero lee open/closed\nif (/^casa\\/[^/]+\\/persiana$/.test(topic)) {\n    if (payload === 'OPEN') payload = 'open';\n    else if (payload === 'CLOSE') payload = 'closed';\n}\n\nreturn { topic: topic, payload: payload };",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 780,
+        "wires": [
+            [
+                "1a0586031508624c"
+            ]
+        ]
+    },
+    {
+        "id": "1a0586031508624c",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "estado (retain)",
+        "topic": "",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 880,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "e53d8705d01f4906",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "al arrancar +3 secs",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "3",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 880,
+        "wires": [
+            [
+                "1f30c8036b172cef"
+            ]
+        ]
+    },
+    {
+        "id": "1f30c8036b172cef",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ESTADOS INICIALES",
+        "func": "// Define los tópicos de MQTT y los valores iniciales para toda la casa\nvar estados = [\n    // --- LUCES ---\n    { topic: \"casa/cocina/luz\", payload: \"OFF\" },\n    { topic: \"casa/hab1/luz\", payload: \"OFF\" },\n    { topic: \"casa/hab2/luz\", payload: \"OFF\" },\n    { topic: \"casa/hab3/luz\", payload: \"OFF\" },\n    { topic: \"casa/bano1/luz\", payload: \"OFF\" },\n    { topic: \"casa/bano2/luz\", payload: \"OFF\" },\n    { topic: \"casa/lavadora/luz\", payload: \"OFF\" },\n    { topic: \"casa/pasillo/luz\", payload: \"OFF\" },\n    \n    // --- PERSIANAS ---\n    { topic: \"casa/hab1/persiana\", payload: \"closed\" },\n    { topic: \"casa/hab2/persiana\", payload: \"closed\" },\n    { topic: \"casa/hab3/persiana\", payload: \"closed\" },\n\n    // --- SWITCHES ---\n    { topic: \"casa/salon/reposapies\", payload: \"OFF\" },\n    { topic: \"casa/salon/tv\", payload: \"OFF\" },\n    { topic: \"casa/salon/altavoces\", payload: \"OFF\" },\n    { topic: \"casa/bano1/grifo\", payload: \"OFF\" },\n    { topic: \"casa/bano2/grifo\", payload: \"OFF\" },\n\n    // --- SENSORES BINARIOS ---\n    { topic: \"casa/pasillo/movimiento\", payload: \"OFF\" },\n    { topic: \"casa/cocina/movimiento\", payload: \"OFF\" },\n    { topic: \"casa/bano1/manos\", payload: \"OFF\" },\n    { topic: \"casa/bano2/manos\", payload: \"OFF\" },\n    { topic: \"casa/salon/ventana\", payload: \"OFF\" },\n\n    // --- CLIMA ---\n    { topic: \"casa/salon/clima/modo\", payload: \"auto\" },\n    { topic: \"casa/salon/clima/consigna\", payload: \"21\" },\n    { topic: \"casa/salon/clima/temperatura\", payload: \"20.5\" },\n    { topic: \"casa/salon/clima/accion\", payload: \"idle\" }\n];\n\n// Genera un mensaje individual para cada estado con retain para Home Assistant\nreturn [estados.map(function(item) {\n    return {\n        topic: item.topic,\n        payload: item.payload,\n        retain: true\n    };\n})];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 880,
+        "wires": [
+            [
+                "0b2f314c4e3841b3"
+            ]
+        ]
+    },
+    {
+        "id": "0b2f314c4e3841b3",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "mqtt out retain",
+        "topic": "",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 700,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "898b4d2a09743148",
+        "type": "link in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 00:00 Luces",
+        "links": [
+            "7cca287657c4ad6d"
+        ],
+        "x": 55,
+        "y": 1200,
+        "wires": [
+            [
+                "f691880156374e15"
+            ]
+        ]
+    },
+    {
+        "id": "f691880156374e15",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "APAGAR 8 LUCES (00:00)",
+        "func": "// APAGAR 8 LUCES\n// Manda OFF a las 8 luces. Un solo array por una salida = 8 mensajes seguidos.\nconst zonas = ['cocina', 'hab1', 'hab2', 'hab3', 'bano1', 'bano2', 'lavadora', 'pasillo'];\n\nreturn [zonas.map(z => ({\n    topic: 'casa/' + z + '/luz/set',\n    payload: 'OFF'\n}))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 1200,
+        "wires": [
+            [
+                "f85b886a4afafe33"
+            ]
+        ]
+    },
+    {
+        "id": "f85b886a4afafe33",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "luces /set",
+        "topic": "",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 720,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "f4203b77dd4ce46e",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "casa/+/luz/set",
+        "topic": "casa/+/luz/set",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 110,
+        "y": 1120,
+        "wires": [
+            [
+                "47d21b7f0bcfbff3"
+            ]
+        ]
+    },
+    {
+        "id": "47d21b7f0bcfbff3",
+        "type": "switch",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "Solo ON",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "ON",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 340,
+        "y": 1120,
+        "wires": [
+            [
+                "d077e332d79dd633"
+            ]
+        ]
+    },
+    {
+        "id": "d077e332d79dd633",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "BRILLO (que varíe segun hora)",
+        "func": "// BRILLO\n// Cuando una luz recibe ON, fija su brillo:\n//   tenue (50)    de 21:00 a 00:00  (variable global reloj_tenue = true)\n//   normal (255)  el resto del dia\nconst tenue = global.get('reloj_tenue') === true;\n\nreturn {\n    topic: msg.topic.replace(/\\/set$/, '/brillo/set'),\n    payload: String(tenue ? 50 : 255)\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1120,
+        "wires": [
+            [
+                "942d2a6cf537be70"
+            ]
+        ]
+    },
+    {
+        "id": "942d2a6cf537be70",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "brillo /set",
+        "topic": "",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 960,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "d68641b5922a20e0",
+        "type": "link in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 21:00 Reposapies TV Encender",
+        "links": [
+            "ff7007c19f48bc62"
+        ],
+        "x": 55,
+        "y": 1400,
+        "wires": [
+            [
+                "dcd0e85bbdedaa52"
+            ]
+        ]
+    },
+    {
+        "id": "2e101c1fbd932105",
+        "type": "link in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 00:00 Reposapies TV Apagar",
+        "links": [
+            "7cca287657c4ad6d"
+        ],
+        "x": 55,
+        "y": 1480,
+        "wires": [
+            [
+                "d5adac6cd2f470c6"
+            ]
+        ]
+    },
+    {
+        "id": "dcd0e85bbdedaa52",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ENCENDER DISP SALON (21:00) x3",
+        "func": "// ON x3\n// Enciende reposapies (Maria), TV y altavoces (Matias) del salon.\nconst dispositivos = ['reposapies', 'tv', 'altavoces'];\n\nreturn [dispositivos.map(d => ({\n    topic: 'casa/salon/' + d + '/set',\n    payload: 'ON'\n}))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 1400,
+        "wires": [
+            [
+                "ad8733ed9f0f3ee1"
+            ]
+        ]
+    },
+    {
+        "id": "d5adac6cd2f470c6",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "APAGAR DISP SALON (00:00)",
+        "func": "// OFF x3\n// Apaga reposapies, TV y altavoces del salon.\nconst dispositivos = ['reposapies', 'tv', 'altavoces'];\n\nreturn [dispositivos.map(d => ({\n    topic: 'casa/salon/' + d + '/set',\n    payload: 'OFF'\n}))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 1480,
+        "wires": [
+            [
+                "f6266a1add687016"
+            ]
+        ]
+    },
+    {
+        "id": "ad8733ed9f0f3ee1",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "salon /set",
+        "topic": "",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 720,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "f6266a1add687016",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "salon /set",
+        "topic": "",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 720,
+        "y": 1480,
+        "wires": []
+    },
+    {
+        "id": "70f97a8791b4adc1",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "RELOJ VIRTUAL",
+        "info": "",
+        "x": 120,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "3e7505bf8e46b4d6",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DE RELOJ",
+        "info": "",
+        "x": 140,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "3c82c6fea021cf7e",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ACTIVA LOS DISPOSITIVOS PARA LAS HORAS ( Y ESTADO INICIAL)",
+        "info": "",
+        "x": 290,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "3bde8ff90a7ff123",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DE LUCES",
+        "info": "",
+        "x": 140,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "2eedc12ddb3c34d5",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DISP SALON (REPOSAPIES - TV - ALTAVOZ)",
+        "info": "",
+        "x": 250,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "ea563f9289a71b36",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL PERSIANAS",
+        "info": "",
+        "x": 150,
+        "y": 1600,
+        "wires": []
+    },
+    {
+        "id": "96b9f63cc4a4b44a",
+        "type": "link in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 8:00 persianas subir",
+        "links": [
+            "aba3a1c54a327d2c"
+        ],
+        "x": 55,
+        "y": 1680,
+        "wires": [
+            [
+                "b5efc1a44b472468"
+            ]
+        ]
+    },
+    {
+        "id": "1bd2d324ee395280",
+        "type": "link in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 21:00 persianas bajar",
+        "links": [
+            "ff7007c19f48bc62"
+        ],
+        "x": 55,
+        "y": 1760,
+        "wires": [
+            [
+                "21d1d3c281506f24"
+            ]
+        ]
+    },
+    {
+        "id": "b5efc1a44b472468",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "SUBIR PERSIANAS",
+        "func": "// OPEN x3\n// Sube las persianas de las 3 habitaciones (Luana).\nconst zonas = ['hab1', 'hab2', 'hab3'];\n\nreturn [zonas.map(z => ({\n    topic: 'casa/' + z + '/persiana/set',\n    payload: 'OPEN'\n}))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 1680,
+        "wires": [
+            [
+                "44e3cf1e33e9e84c"
+            ]
+        ]
+    },
+    {
+        "id": "21d1d3c281506f24",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "BAJAR PERSIANAS",
+        "func": "// CLOSE x3\n// Baja las persianas de las 3 habitaciones (Luana).\nconst zonas = ['hab1', 'hab2', 'hab3'];\n\nreturn [zonas.map(z => ({\n    topic: 'casa/' + z + '/persiana/set',\n    payload: 'CLOSE'\n}))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 1760,
+        "wires": [
+            [
+                "f37edb939946a693"
+            ]
+        ]
+    },
+    {
+        "id": "44e3cf1e33e9e84c",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "persianas /set",
+        "topic": "",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 680,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "f37edb939946a693",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "persianas /set",
+        "topic": "",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 680,
+        "y": 1760,
+        "wires": []
+    },
+    {
+        "id": "4f7dcc594c2bdd75",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DE MOVIMIENTO EN PASILLO (LUZ TENUE)",
+        "info": "",
+        "x": 250,
+        "y": 1880,
+        "wires": []
+    },
+    {
+        "id": "033bcae73219f950",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DE MOVIMIENTO EN COCINA (LUZ TENUE)",
+        "info": "",
+        "x": 250,
+        "y": 2120,
+        "wires": []
+    },
+    {
+        "id": "0b040e0fc0aae9c5",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL GRIFO",
+        "info": "",
+        "x": 130,
+        "y": 2360,
+        "wires": []
+    },
+    {
+        "id": "37d0239ff8e7b2b4",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "PONER MANOS",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "ON",
+        "payloadType": "str",
+        "x": 140,
+        "y": 2440,
+        "wires": [
+            [
+                "e5e86529da51b24d"
+            ]
+        ]
+    },
+    {
+        "id": "cf9610c10988c2d7",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "QUITAR MANOS",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "OFF",
+        "payloadType": "str",
+        "x": 140,
+        "y": 2520,
+        "wires": [
+            [
+                "e5e86529da51b24d"
+            ]
+        ]
+    },
+    {
+        "id": "e5e86529da51b24d",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "manos bano 1",
+        "topic": "casa/bano1/manos",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 400,
+        "y": 2480,
+        "wires": []
+    },
+    {
+        "id": "1eb10a8411169e93",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "manos bano 1",
+        "topic": "casa/bano1/manos",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 110,
+        "y": 2600,
+        "wires": [
+            [
+                "bb7b624e4bb5d740"
+            ]
+        ]
+    },
+    {
+        "id": "bb7b624e4bb5d740",
+        "type": "switch",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON / OFF",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "ON",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "OFF",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 360,
+        "y": 2600,
+        "wires": [
+            [
+                "ed915173c24c0a3b"
+            ],
+            [
+                "ba57f57096104232"
+            ]
+        ]
+    },
+    {
+        "id": "ed915173c24c0a3b",
+        "type": "trigger",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON 10 secs OFF",
+        "op1": "ON",
+        "op2": "OFF",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "10",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 570,
+        "y": 2560,
+        "wires": [
+            [
+                "8566d4873541859b"
+            ]
+        ]
+    },
+    {
+        "id": "8566d4873541859b",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "grifo bano 1 /set",
+        "topic": "casa/bano1/grifo/set",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 820,
+        "y": 2600,
+        "wires": []
+    },
+    {
+        "id": "34b00fcf5b3d90ca",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "SIMULADOR DE TEMPERATURA",
+        "info": "",
+        "x": 180,
+        "y": 2800,
+        "wires": []
+    },
+    {
+        "id": "cc3848b726b56956",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "TEMPERATURA 18",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "18",
+        "payloadType": "num",
+        "x": 150,
+        "y": 2880,
+        "wires": [
+            [
+                "343cb00f5b898ad1"
+            ]
+        ]
+    },
+    {
+        "id": "e07f0ccee3d9fb17",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "TEMPERATURA 22",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "22",
+        "payloadType": "num",
+        "x": 150,
+        "y": 2960,
+        "wires": [
+            [
+                "343cb00f5b898ad1"
+            ]
+        ]
+    },
+    {
+        "id": "28cde29fcb99595d",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "TEMPERATURA 24",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "24",
+        "payloadType": "num",
+        "x": 150,
+        "y": 3040,
+        "wires": [
+            [
+                "343cb00f5b898ad1"
+            ]
+        ]
+    },
+    {
+        "id": "f63e7fa7fa80dbfc",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "TEMPERATURA 28",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "28",
+        "payloadType": "num",
+        "x": 150,
+        "y": 3120,
+        "wires": [
+            [
+                "343cb00f5b898ad1"
+            ]
+        ]
+    },
+    {
+        "id": "343cb00f5b898ad1",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "temperatura salon simulada",
+        "topic": "casa/salon/clima/temperatura",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 440,
+        "y": 3000,
+        "wires": []
+    },
+    {
+        "id": "29e6b50c8d497142",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DE TEMPERATURA",
+        "info": "",
+        "x": 170,
+        "y": 2740,
+        "wires": []
+    },
+    {
+        "id": "60c00c34ef02fee1",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DE VENTANAS",
+        "info": "",
+        "x": 150,
+        "y": 3200,
+        "wires": []
+    },
+    {
+        "id": "ce4a1dead5b4ece4",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "VENTANA ABIERTA",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "ON",
+        "payloadType": "str",
+        "x": 150,
+        "y": 3280,
+        "wires": [
+            [
+                "d784b8701cde4d28"
+            ]
+        ]
+    },
+    {
+        "id": "51c79b86c4950c4d",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "VENTANA CERRADA",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "OFF",
+        "payloadType": "str",
+        "x": 160,
+        "y": 3360,
+        "wires": [
+            [
+                "d784b8701cde4d28"
+            ]
+        ]
+    },
+    {
+        "id": "d784b8701cde4d28",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ventana salon",
+        "topic": "casa/salon/ventana",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 400,
+        "y": 3320,
+        "wires": []
+    },
+    {
+        "id": "49e5e6fd833bed43",
+        "type": "comment",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "CONTROL DEL REGULADOR (ON / OFF) (HORARIO)",
+        "info": "",
+        "x": 240,
+        "y": 3440,
+        "wires": []
+    },
+    {
+        "id": "b97edbaa5c520162",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "temperatura ",
+        "topic": "casa/salon/clima/temperatura",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 110,
+        "y": 3520,
+        "wires": [
+            [
+                "3da3d8683c38fe50"
+            ]
+        ]
+    },
+    {
+        "id": "525f62881d7436d8",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "consigna",
+        "topic": "casa/salon/clima/consigna",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 100,
+        "y": 3600,
+        "wires": [
+            [
+                "3da3d8683c38fe50"
+            ]
+        ]
+    },
+    {
+        "id": "d1a9a62d436c41c1",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "modo pedido",
+        "topic": "casa/salon/clima/modo/set",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 110,
+        "y": 3680,
+        "wires": [
+            [
+                "3da3d8683c38fe50"
+            ]
+        ]
+    },
+    {
+        "id": "21514f7052f00802",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ventana",
+        "topic": "casa/salon/ventana",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 3760,
+        "wires": [
+            [
+                "3da3d8683c38fe50"
+            ]
+        ]
+    },
+    {
+        "id": "a9da028c75b2d1d3",
+        "type": "link in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 00:00 regulador ",
+        "links": [
+            "7cca287657c4ad6d"
+        ],
+        "x": 55,
+        "y": 3840,
+        "wires": [
+            [
+                "3da3d8683c38fe50"
+            ]
+        ]
+    },
+    {
+        "id": "3f9c364259f880dd",
+        "type": "link in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "EVENTO 8:00 regulador",
+        "links": [
+            "aba3a1c54a327d2c"
+        ],
+        "x": 55,
+        "y": 3920,
+        "wires": [
+            [
+                "3da3d8683c38fe50"
+            ]
+        ]
+    },
+    {
+        "id": "3da3d8683c38fe50",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "REGULADOR",
+        "func": "// REGULADOR (salon)\n// Entradas: temperatura, consigna, modo pedido por el usuario, ventana y eventos 00:00 / 08:00.\n// Salida 1 -> modo efectivo (off / auto)\n// Salida 2 -> accion (heating / cooling / idle / off)\nconst T = 'casa/salon/clima/';\nconst s = context.get('s') || { temp: null, consigna: 22, modoUsuario: 'off', ventana: false };\n\nswitch (msg.topic) {\n    case T + 'temperatura': {\n        const v = parseFloat(msg.payload);\n        if (!isNaN(v)) s.temp = v;\n        break;\n    }\n    case T + 'consigna': {\n        const v = parseFloat(msg.payload);\n        if (!isNaN(v)) s.consigna = v;\n        break;\n    }\n    case T + 'modo/set': {\n        const m = String(msg.payload);\n        if (m === 'off' || m === 'auto') s.modoUsuario = m;\n        break;\n    }\n    case 'casa/salon/ventana':\n        s.ventana = (String(msg.payload) === 'ON');   // ON = abierta\n        break;\n    default:\n        // Eventos de hora (llegan sin topic). A las 08:00 el regulador vuelve a estar activo.\n        // A las 00:00 solo se vuelve a evaluar (la noche se calcula con la hora del reloj).\n        if (msg.payload === '08:00') s.modoUsuario = 'auto';\n}\ncontext.set('s', s);\n\n// Noche = de 00:00 a 08:00 (hora del reloj virtual)\nconst ahora = global.get('reloj_ahora') || Date.now();\nconst noche = new Date(ahora).getHours() < 8;\n\n// Modo efectivo\nlet motivo = '';\nlet efectivo = s.modoUsuario;\nif (noche) { efectivo = 'off'; motivo = ' (noche)'; }\nelse if (s.ventana) { efectivo = 'off'; motivo = ' (ventana abierta)'; }\n\n// Accion\nlet accion = 'off';\nif (efectivo === 'auto') {\n    if (s.temp === null) accion = 'idle';\n    else if (s.temp < s.consigna - 0.5) accion = 'heating';\n    else if (s.temp > s.consigna + 0.5) accion = 'cooling';\n    else accion = 'idle';\n}\n\nnode.status({\n    fill: efectivo === 'auto' ? 'green' : 'grey',\n    shape: 'dot',\n    text: efectivo + ' / ' + accion + motivo\n});\n\nreturn [{ payload: efectivo }, { payload: accion }];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 3720,
+        "wires": [
+            [
+                "cd1a459bd2d80779"
+            ],
+            [
+                "74c39c5f6dbb724f"
+            ]
+        ]
+    },
+    {
+        "id": "cd1a459bd2d80779",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "modo efectivo",
+        "topic": "casa/salon/clima/modo",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 800,
+        "y": 3660,
+        "wires": []
+    },
+    {
+        "id": "74c39c5f6dbb724f",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "accion",
+        "topic": "casa/salon/clima/accion",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 770,
+        "y": 3760,
+        "wires": []
+    },
+    {
+        "id": "8c11fac16bf2e4b2",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "MOVIMIENTO PASILLO",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "ON",
+        "payloadType": "str",
+        "x": 170,
+        "y": 1960,
+        "wires": [
+            [
+                "22ad989ce658495e"
+            ]
+        ]
+    },
+    {
+        "id": "22ad989ce658495e",
+        "type": "trigger",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON 3secs OFF",
+        "op1": "ON",
+        "op2": "OFF",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "3",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 480,
+        "y": 1960,
+        "wires": [
+            [
+                "cc1a34d4f4559aef"
+            ]
+        ]
+    },
+    {
+        "id": "cc1a34d4f4559aef",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "sensor pasillo",
+        "topic": "casa/pasillo/movimiento",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 780,
+        "y": 1960,
+        "wires": []
+    },
+    {
+        "id": "0d3ed21db0c759f2",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "movimiento pasillo",
+        "topic": "casa/pasillo/movimiento",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 2040,
+        "wires": [
+            [
+                "640656561228e0d9"
+            ]
+        ]
+    },
+    {
+        "id": "13fb1424fec050c1",
+        "type": "trigger",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON 30 secs OFF",
+        "op1": "ON",
+        "op2": "OFF",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "30",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 970,
+        "y": 2040,
+        "wires": [
+            [
+                "817902301c98ed1b"
+            ]
+        ]
+    },
+    {
+        "id": "640656561228e0d9",
+        "type": "switch",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "Solo ON",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "ON",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 360,
+        "y": 2040,
+        "wires": [
+            [
+                "17724280e66c8985"
+            ]
+        ]
+    },
+    {
+        "id": "17724280e66c8985",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "DEJA PASAR SI HORA ENTRE 21:00 y 00:00",
+        "func": "// FRANJA 21-00h\n// Deja pasar el movimiento solo si es de 21:00 a 00:00.\n// La variable global reloj_tenue la mantiene RELOJ VIRTUAL.\nif (global.get('reloj_tenue') === true) {\n    node.status({ fill: 'green', shape: 'dot', text: 'de noche: pasa' });\n    return msg;\n}\n\nnode.status({ fill: 'grey', shape: 'ring', text: 'de dia: ignorado' });\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 2040,
+        "wires": [
+            [
+                "13fb1424fec050c1"
+            ]
+        ]
+    },
+    {
+        "id": "817902301c98ed1b",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "luz pasillo /get",
+        "topic": "casa/pasillo/luz/set",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 1220,
+        "y": 2040,
+        "wires": []
+    },
+    {
+        "id": "28efd4d3d70f9e0b",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "MOVIMIENTO COCINA",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "ON",
+        "payloadType": "str",
+        "x": 160,
+        "y": 2200,
+        "wires": [
+            [
+                "0e725548c73a742d"
+            ]
+        ]
+    },
+    {
+        "id": "0e725548c73a742d",
+        "type": "trigger",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON 3secs OFF",
+        "op1": "ON",
+        "op2": "OFF",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "3",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 480,
+        "y": 2200,
+        "wires": [
+            [
+                "859c19953393d2bf"
+            ]
+        ]
+    },
+    {
+        "id": "859c19953393d2bf",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "sensor cocina",
+        "topic": "casa/cocina/movimiento",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 780,
+        "y": 2200,
+        "wires": []
+    },
+    {
+        "id": "d504e93979a0a948",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "movimiento cocina",
+        "topic": "casa/cocina/movimiento",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 2280,
+        "wires": [
+            [
+                "0befd9e24a07e7cd"
+            ]
+        ]
+    },
+    {
+        "id": "fc46bf7c44ffb0d8",
+        "type": "trigger",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON 30 secs OFF",
+        "op1": "ON",
+        "op2": "OFF",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "30",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 970,
+        "y": 2280,
+        "wires": [
+            [
+                "90657f9df324b811"
+            ]
+        ]
+    },
+    {
+        "id": "0befd9e24a07e7cd",
+        "type": "switch",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "Solo ON",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "ON",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 360,
+        "y": 2280,
+        "wires": [
+            [
+                "82ca025c42e380e3"
+            ]
+        ]
+    },
+    {
+        "id": "82ca025c42e380e3",
+        "type": "function",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "DEJA PASAR SI HORA ENTRE 21:00 y 00:00",
+        "func": "// FRANJA 21-00h\n// Deja pasar el movimiento solo si es de 21:00 a 00:00.\n// La variable global reloj_tenue la mantiene RELOJ VIRTUAL.\nif (global.get('reloj_tenue') === true) {\n    node.status({ fill: 'green', shape: 'dot', text: 'de noche: pasa' });\n    return msg;\n}\n\nnode.status({ fill: 'grey', shape: 'ring', text: 'de dia: ignorado' });\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 2280,
+        "wires": [
+            [
+                "fc46bf7c44ffb0d8"
+            ]
+        ]
+    },
+    {
+        "id": "90657f9df324b811",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "luz cocina /get",
+        "topic": "casa/cocina/luz/set",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 1220,
+        "y": 2280,
+        "wires": []
+    },
+    {
+        "id": "ba57f57096104232",
+        "type": "change",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "payload OFF",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "OFF",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 550,
+        "y": 2640,
+        "wires": [
+            [
+                "8566d4873541859b"
+            ]
+        ]
+    },
+    {
+        "id": "fe299556abb5fa74",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "PONER MANOS",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "ON",
+        "payloadType": "str",
+        "x": 1040,
+        "y": 2440,
+        "wires": [
+            [
+                "fdf29bade1eb241f"
+            ]
+        ]
+    },
+    {
+        "id": "3073344e51339c7f",
+        "type": "inject",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "QUITAR MANOS",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "OFF",
+        "payloadType": "str",
+        "x": 1040,
+        "y": 2520,
+        "wires": [
+            [
+                "fdf29bade1eb241f"
+            ]
+        ]
+    },
+    {
+        "id": "fdf29bade1eb241f",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "manos bano 2",
+        "topic": "casa/bano2/manos",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 1300,
+        "y": 2480,
+        "wires": []
+    },
+    {
+        "id": "a99ae6e32be3583c",
+        "type": "mqtt in",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "manos bano 2",
+        "topic": "casa/bano2/manos",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "c0a5bae8e612a519",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 1010,
+        "y": 2600,
+        "wires": [
+            [
+                "fccfc2dca5ce8089"
+            ]
+        ]
+    },
+    {
+        "id": "fccfc2dca5ce8089",
+        "type": "switch",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON / OFF",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "ON",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "OFF",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1260,
+        "y": 2600,
+        "wires": [
+            [
+                "ee1b82d3ed1d081e"
+            ],
+            [
+                "5d67117f98ee687c"
+            ]
+        ]
+    },
+    {
+        "id": "ee1b82d3ed1d081e",
+        "type": "trigger",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "ON 10 secs OFF",
+        "op1": "ON",
+        "op2": "OFF",
+        "op1type": "str",
+        "op2type": "str",
+        "duration": "10",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 1470,
+        "y": 2560,
+        "wires": [
+            [
+                "e88fb231ad89e46b"
+            ]
+        ]
+    },
+    {
+        "id": "e88fb231ad89e46b",
+        "type": "mqtt out",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "grifo bano 2 /set",
+        "topic": "casa/bano2/grifo/set",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c0a5bae8e612a519",
+        "x": 1720,
+        "y": 2600,
+        "wires": []
+    },
+    {
+        "id": "5d67117f98ee687c",
+        "type": "change",
+        "z": "eb77ea0fe8cb6e59",
+        "name": "payload OFF",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "OFF",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1450,
+        "y": 2640,
+        "wires": [
+            [
+                "e88fb231ad89e46b"
+            ]
+        ]
+    }
+]
